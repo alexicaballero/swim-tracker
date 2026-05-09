@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <File Path=".dockerignore" />
+    <File Path="docker-compose.yml" />
+    <Project Path="src/SwimTracker.Api.Controllers/SwimTracker.Api.Controllers.csproj" Id="17e6963c-febf-43cf-96d4-8e0b77e35ac1" />
+    <Project Path="src/SwimTracker.Api.REPR/SwimTracker.Api.REPR.csproj" Id="45415270-f17a-4bbf-9f89-0b6f2d649c4f" />
+    <Project Path="src/SwimTracker.Api/SwimTracker.Api.csproj" />
+    <Project Path="src/SwimTracker.Application/SwimTracker.Application.csproj" />
+    <Project Path="src/SwimTracker.Domain/SwimTracker.Domain.csproj" />
+    <Project Path="src/SwimTracker.Infrastructure/SwimTracker.Infrastructure.csproj" />
+    <Project Path="src/SwimTracker.SharedKernel/SwimTracker.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>

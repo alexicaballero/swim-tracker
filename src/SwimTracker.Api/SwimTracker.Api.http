@@ -1,0 +1,71 @@
+@SwimTracker.Api_HostAddress = http://localhost:5227
+
+### Get Weather Forecast
+GET {{SwimTracker.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+### Get Club by ID
+
+GET {{SwimTracker.Api_HostAddress}}/api/clubs/14379f22-c891-4d61-ab9d-9ab460b3b32e
+Accept: application/json
+
+### Get All Clubs
+
+GET {{SwimTracker.Api_HostAddress}}/api/clubs
+Accept: application/json
+
+
+### Create New Club
+POST {{SwimTracker.Api_HostAddress}}/api/clubs
+Content-Type: application/json
+
+{
+    "name": "New Swim Club",
+    "acronym": "NSC",
+    "countryCode": "USA",
+    "city": "New York",
+    "email": "info@newswimclub.com"
+}
+
+
+### Get Swimmer by ID
+GET {{SwimTracker.Api_HostAddress}}/api/swimmers/75e990e7-f341-4f9d-a894-a9490b8aee0a
+Accept: application/json
+
+### Get All Swimmers
+GET {{SwimTracker.Api_HostAddress}}/api/swimmers
+Accept: application/json
+
+### Create New Swimmer
+POST {{SwimTracker.Api_HostAddress}}/api/swimmers
+Content-Type: application/json
+{
+    "clubId": "14379f22-c891-4d61-ab9d-9ab460b3b32e",
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "2000-01-01",
+    "gender": "Male",
+    "nationality": "USA",
+    "email": "john.doe@example.com",
+    "phone": "123-456-7890",    
+    "licenseNumber": "ABC123456",
+    "licenseStatus": "Active",
+    "licenseExpiresAt": "2025-12-31"
+}
+
+### Create New Swimmer 2
+POST {{SwimTracker.Api_HostAddress}}/api/swimmers
+Content-Type: application/json
+{
+    "clubId": "14379f22-c891-4d61-ab9d-9ab460b3b32e",
+    "firstName": "Angel David",
+    "lastName": "Caballero",
+    "dateOfBirth": "2015-05-24",
+    "gender": "Male",
+    "nationality": "COL",
+    "email": "angel.caballero@example.com",
+    "phone": "316-880-0776",    
+    "licenseNumber": "ABC123456",
+    "licenseStatus": "Active",
+    "licenseExpiresAt": "2030-12-31"
+}

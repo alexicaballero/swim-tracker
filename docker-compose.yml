@@ -1,0 +1,61 @@
+services:
+
+  # ── Base de datos principal ─────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: swim_postgres
+    environment:
+      POSTGRES_USER: swim
+      POSTGRES_PASSWORD: swim_secret
+      POSTGRES_DB: swimtracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swim -d swimtracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - swim_net
+
+  # # ── API ASP.NET Core ─────────────────────────────────────────────────────────
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: src/SwimTracker.API/Dockerfile
+  #   container_name: swim_api
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ASPNETCORE_HTTP_PORTS: "8080"
+  #     ConnectionStrings__Default: "Host=postgres;Port=5432;Database=swimtracker;Username=swim;Password=swim_secret"
+  #     Jwt__Authority: "http://keycloak:8080/realms/swimtracker"
+  #     Jwt__Audience: "swimtracker-api"
+  #     Jwt__RequireHttpsMetadata: "false"
+  #     Keycloak__ClientId: "swimtracker-api"
+  #     Keycloak__RevocationUrl: "http://keycloak:8080/realms/swimtracker/protocol/openid-connect/revoke"
+  #     Keycloak__TokenUrl: "http://keycloak:8080/realms/swimtracker/protocol/openid-connect/token"
+  #     Keycloak__AdminBaseUrl: "http://keycloak:8080/admin/realms/swimtracker"
+  #     DataProtection__KeysPath: "/app/data-protection-keys"
+  #     DataProtection__Certificate__Path: "/app/certs/data-protection.pfx"
+  #     DataProtection__Certificate__Password: "SwimTrackerDevCert123!"
+  #   volumes:
+  #     - data_protection_keys:/app/data-protection-keys
+  #     - ./certs:/app/certs:ro
+  #   ports:
+  #     - "5000:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - swim_net
+
+volumes:
+  postgres_data:
+  data_protection_keys:
+
+networks:
+  swim_net:
+    driver: bridge

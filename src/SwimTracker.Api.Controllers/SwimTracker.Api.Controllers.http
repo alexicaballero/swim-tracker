@@ -1,0 +1,6 @@
+@SwimTracker.Api.Controllers_HostAddress = http://localhost:5034
+
+GET {{SwimTracker.Api.Controllers_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
