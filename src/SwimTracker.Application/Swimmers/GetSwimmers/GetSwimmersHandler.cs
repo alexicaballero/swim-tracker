@@ -14,7 +14,18 @@ public class GetSwimmersHandler : IHandler<List<GetSwimmersResponse>>
     public async Task<Result<List<GetSwimmersResponse>>> HandleAsync(CancellationToken cancellationToken)
     {
         var swimmers = await _swimmerRepository.GetAllAsync(cancellationToken);
-        var response = swimmers.Select(s => new GetSwimmersResponse(s.Id, s.ClubId, s.FirstName, s.LastName, s.DateOfBirth, s.Gender, s.Nationality, s.Email, s.Phone, s.LicenseNumber, s.LicenseStatus, s.LicenseExpiresAt)).ToList();
+        var response = swimmers.Select(s => new GetSwimmersResponse(s.Id, 
+                                                                    s.ClubId, 
+                                                                    s.FirstName, 
+                                                                    s.LastName, 
+                                                                    s.DateOfBirth, 
+                                                                    s.Gender, 
+                                                                    s.Nationality, 
+                                                                    s.Email, 
+                                                                    s.Phone, 
+                                                                    s.LicenseNumber, 
+                                                                    s.LicenseStatus, 
+                                                                    s.LicenseExpiresAt)).ToList();
 
         return Result.Success(response);
     }

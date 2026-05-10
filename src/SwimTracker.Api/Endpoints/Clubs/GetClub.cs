@@ -10,7 +10,7 @@ public class GetClub : IEndpoint
             .WithTags("Clubs");
     }
 
-    private static async Task<IResult> HandleAsync(Guid id, IRequestHandler<GetClubRequest, ClubResponse> requestHandler, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(Guid id, IRequestHandler<GetClubRequest, GetClubResponse> requestHandler, CancellationToken cancellationToken)
     {
         var request = new GetClubRequest(id);
         var result = await requestHandler.HandleAsync(request, cancellationToken);

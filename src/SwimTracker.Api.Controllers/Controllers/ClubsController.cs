@@ -12,7 +12,7 @@ public class ClubsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetClub(
         Guid id,
-        IRequestHandler<GetClubRequest, ClubResponse> requestHandler,
+        IRequestHandler<GetClubRequest, GetClubResponse> requestHandler,
         CancellationToken cancellationToken)
     {
         var request = new GetClubRequest(id);

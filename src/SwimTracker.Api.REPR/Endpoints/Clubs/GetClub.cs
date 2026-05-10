@@ -6,15 +6,15 @@ namespace SwimTracker.Api.REPR.Endpoints.Clubs;
 /// <summary>
 /// Endpoint for retrieving a club by its ID.
 /// </summary>
-public class GetClub : Endpoint<GetClubRequest, ClubResponse>
+public class GetClub : Endpoint<GetClubRequest, GetClubResponse>
 {
-    private readonly IRequestHandler<GetClubRequest, ClubResponse> _requestHandler;
+    private readonly IRequestHandler<GetClubRequest, GetClubResponse> _requestHandler;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GetClub"/> class.
+    /// Initializes a new instance of the <see cref="GetClub"/> class. 
     /// </summary>
     /// <param name="requestHandler">The request handler for processing the get club request.</param>
-    public GetClub(IRequestHandler<GetClubRequest, ClubResponse> requestHandler)
+    public GetClub(IRequestHandler<GetClubRequest, GetClubResponse> requestHandler)
     {
         _requestHandler = requestHandler;
     }

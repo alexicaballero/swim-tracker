@@ -2,4 +2,4 @@
 
 namespace SwimTracker.Application.Clubs.GetClub;
 
-public sealed record GetClubRequest(Guid id) : IRequest<ClubResponse>;
+public sealed record GetClubRequest(Guid Id) : IRequest<GetClubResponse>;

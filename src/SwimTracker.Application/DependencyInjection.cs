@@ -12,7 +12,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<IRequestHandler<GetClubRequest, ClubResponse>, GetClubHandler>();
+        services.AddScoped<IRequestHandler<GetClubRequest, GetClubResponse>, GetClubHandler>();
         services.AddScoped<IRequestHandler<CreateClubRequest>, CreateClubHandler>();
         services.AddScoped<IHandler<List<GetClubsResponse>>, GetClubsHandler>();
 

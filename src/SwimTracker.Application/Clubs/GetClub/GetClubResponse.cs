@@ -1,6 +1,6 @@
 ﻿namespace SwimTracker.Application.Clubs.GetClub;
 
-public sealed record ClubResponse(
+public sealed record GetClubResponse(
     Guid Id,
     string Name,
     string Acronym,

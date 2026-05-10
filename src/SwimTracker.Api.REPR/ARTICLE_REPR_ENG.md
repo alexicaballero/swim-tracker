@@ -1,17 +1,17 @@
-# Migrate from Controllers to REPR: Two Practical Approaches
+# Migrating from Controllers to REPR: Two Practical Approaches
 
 ## Introduction
 
-For years, ASP.NET developers have relied on **Controllers** as the cornerstone for building REST APIs. However, there is an alternative pattern gaining traction in the community: **REPR** (**Re**quest-**E**nd**P**oint-**R**esponse).
+For years, ASP.NET developers have relied on **Controllers** as the cornerstone for building REST APIs. However, there's an alternative pattern gaining traction in the community: **REPR** (**Re**quest-**E**nd**P**oint-**R**esponse).
 
-In this practical guide, we will explore **two different ways** to implement **REPR**:
+In this practical guide, we'll explore **two different ways** to implement **REPR**:
 
 1. **Using the FastEndpoints library** - Fast and feature-rich out of the box
-2. **With a custom implementation** - No third-party dependencies, total control
+2. **With a custom implementation** - No third-party dependencies, full control
 
-In this article, we will migrate two complete controllers (`ClubsController` and `SwimmersController`), removing each endpoint from the controller as we progress, until we achieve a REPR-based architecture.
+In this article, we'll migrate two complete controllers (`ClubsController` and `SwimmersController`), removing each endpoint from the controller as we progress, until we achieve a REPR-based architecture.
 
-For this guide we will use **SwimTracker**, a REST API to manage information about swimming clubs and their swimmers. It is an application built with ASP.NET Core following **Clean Architecture** principles:
+For this guide, we'll use **SwimTracker**, a REST API for managing swimming club information and their swimmers. It's an application built with ASP.NET Core following **Clean Architecture** principles:
 
 - **Architecture**: Clean Architecture / Hexagonal Architecture
   - `Domain`: Business entities (Club, Swimmer), domain logic
@@ -19,20 +19,20 @@ For this guide we will use **SwimTracker**, a REST API to manage information abo
   - `Infrastructure`: Concrete implementations (EF Core, persistence)
   - `API`: Presentation layer (Controllers/Endpoints)
 
-- **Implemented patterns**:
+- **Implemented Patterns**:
   - **Result Pattern**: Functional error handling without exceptions
   - **Repository Pattern**: Data layer abstraction
   - **Unit of Work**: Transaction management
   - **Handler Pattern**: Simplified CQRS for commands and queries
-  - **Domain Events**: Domain events on entities
+  - **Domain Events**: Domain events in entities
 
 - **Technology**: PostgreSQL with Entity Framework Core
 
-- **Functional domains**:
-  - **Clubs**: Swimming club management (create, list, query)
-  - **Swimmers**: Swimmer management (create, list, query)
+- **Functional Domains**:
+  - **Clubs**: Managing swimming clubs (create, list, query)
+  - **Swimmers**: Managing swimmers (create, list, query)
 
-This structure is representative of real production APIs, which makes the examples applicable to many projects.
+This structure is representative of real production APIs, making the examples applicable to many projects.
 
 ---
 
@@ -43,7 +43,7 @@ REPR is a modern architectural pattern that organizes API code around **individu
 ```mermaid
 graph LR
     A["📥 Request"] -->|"HTTP Client"| B["⚙️ Endpoint"]
-    B -->|"Processes logic"| C["📤 Response"]
+    B -->|"Process logic"| C["📤 Response"]
     
     style A fill:#90EE90,stroke:#228B22,color:#000
     style B fill:#A9A9A9,stroke:#696969,color:#fff
@@ -71,8 +71,8 @@ Endpoints/Clubs/        ← One folder with one class per method
 **Single Responsibility Principle (SRP)** - Each class has a single reason to change  
 **Better Testability** - Smaller endpoints tend to be easier to test in isolation  
 **Scalability** - Teams can work in parallel with fewer merge conflicts  
-**Maintainability** - Makes locating the logic for each operation easier  
-**Flexible Configuration** - Each endpoint can have its own authorization policy, validation, etc.
+**Maintainability** - Makes it easy to locate the logic for each operation  
+**Flexible Configuration** - Each endpoint can have its own authorization, validation policies, etc.
 
 ---
 
@@ -88,7 +88,7 @@ using SwimTracker.Application.Clubs.CreateClub;
 using SwimTracker.Application.Clubs.GetClub;
 using SwimTracker.Application.Clubs.GetClubs;
 
-namespace SwimTracker.Api.REPR.Controllers;
+namespace SwimTracker.Api.Controllers.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -97,7 +97,7 @@ public class ClubsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetClub(
         Guid id,
-        IRequestHandler<GetClubRequest, ClubResponse> requestHandler,
+        IRequestHandler<GetClubRequest, GetClubResponse> requestHandler,
         CancellationToken cancellationToken)
     {
         var request = new GetClubRequest(id);
@@ -220,19 +220,25 @@ public class SwimmersController : ControllerBase
 }
 ```
 
-**Objective**: Migrate `ClubsController` using **FastEndpoints**, and `SwimmersController` using a **custom implementation**, to compare both approaches in practice.
+**Goal**: Migrate `ClubsController` using **FastEndpoints**, and `SwimmersController` using a **custom implementation**, to compare both approaches practically.
 
 ---
 
 ## Data Contracts: Request and Response
 
-Before migrating the controllers, it is fundamental to understand the **data contracts** that define how information flows in our API. The **REPR** pattern is not just about endpoints — it's **Re**quest-**E**ndpoint-**R**esponse, where each piece has a specific role:
+Before migrating the controllers, it's essential to understand the **data contracts** that define how information flows in our API. The **REPR** pattern is not just about endpoints, it's **Re**quest-**E**ndpoint-**R**esponse, where each piece has a specific role:
 
 - **Request**: Defines what data the endpoint receives from the client
 - **Response**: Defines what data the endpoint returns to the client
 - **Endpoint**: Orchestrates the logic between both
 
-In **Clean Architecture**, these contracts live in the **Application layer** (use cases), not in the presentation layer (API). This allows reusing the same contracts regardless of whether you use Controllers, FastEndpoints, or Minimal APIs.
+In **Clean Architecture**, it's a **recommended practice** to locate these contracts in the **Application layer** (use cases), not in the presentation layer (API). This architectural decision offers significant advantages:
+
+- **Reusability**: The same contracts work with Controllers, FastEndpoints, or Minimal APIs
+- **Decoupling**: The presentation doesn't depend on internal details
+- **Testability**: Makes it easier to test logic without the presentation layer
+
+However, this is not an "absolute truth". In some contexts (such as small projects, independent teams, or when each API has very specific use cases) it may be valid to keep the contracts in the presentation layer. The decision should be made considering the complexity, scale, and actual needs of the project.
 
 ### Project Structure
 
@@ -251,7 +257,7 @@ SwimTracker.Application/
         └── GetClubsHandler.cs
 ```
 
-This **feature-based** organization rather than by file type facilitates code navigation and maintenance.
+This **feature-based** organization rather than by file type makes code navigation and maintenance easier.
 
 ### Contracts for Clubs
 
@@ -262,30 +268,10 @@ using SwimTracker.Application.Abstractions.Messaging;
 
 namespace SwimTracker.Application.Clubs.GetClub;
 
-public sealed record GetClubRequest(Guid id) : IRequest<ClubResponse>;
+public sealed record GetClubRequest(Guid Id) : IRequest<GetClubResponse>;
 ```
 
 **Purpose**: Request a specific club by its ID.
-
-#### ClubResponse.cs
-
-```csharp
-namespace SwimTracker.Application.Clubs.GetClub;
-
-public sealed record ClubResponse(
-    Guid Id,
-    string Name,
-    string Acronym,
-    string CountryCode,
-    string City,
-    string? Address,
-    string? Phone,
-    string Email,
-    string? FederationMemberId,
-    string? LogoUrl);
-```
-
-**Purpose**: Return the complete details of a club.
 
 #### CreateClubRequest.cs
 
@@ -302,16 +288,16 @@ public record CreateClubRequest(
     string Email) : IRequest;
 ```
 
-**Purpose**: Create a new club with the minimum required data.
+**Purpose**: Create a new club with minimum required data.
 
 **Note**: This request implements `IRequest` without a response type because it returns an empty `Result` (success/failure only).
 
 #### GetClubsResponse.cs
 
 ```csharp
-namespace SwimTracker.Application.Clubs.GetClubs;
+namespace SwimTracker.Application.Clubs.GetClub;
 
-public record GetClubsResponse(
+public sealed record GetClubResponse(
     Guid Id,
     string Name,
     string Acronym,
@@ -324,7 +310,7 @@ public record GetClubsResponse(
     string? LogoUrl);
 ```
 
-**Purpose**: Return a summary of a club in a list. In this case, it is identical to `ClubResponse`, but could differ if the list required fewer fields.
+**Purpose**: Return a summary of a club in a list. In this case, it's identical to `ClubResponse`, but could differ if the list required fewer fields.
 
 ### Contracts for Swimmers
 
@@ -360,7 +346,7 @@ public record GetSwimmerResponse(
     DateOnly? LicenseExpiresAt);
 ```
 
-**Purpose**: Return all data of a swimmer, including their license information.
+**Purpose**: Return all data of a swimmer, including license information.
 
 #### CreateSwimmerRequest.cs
 
@@ -404,7 +390,7 @@ public sealed record CreateSwimmerResponse(
     DateOnly? LicenseExpiresAt);
 ```
 
-**Purpose**: Confirm the data of the created swimmer.
+**Purpose**: Confirm the created swimmer's data.
 
 **Note**: In a REST API, you would typically return the `Id` of the created resource. This model could be improved by including the `Guid Id` field.
 
@@ -436,7 +422,7 @@ All these models are defined as **records** in C# because:
 
 - **Immutability by default** - Data cannot be modified after creation
 - **Value comparison** - Two records with the same data are equal
-- **Concise syntax** - Less repetitive code
+- **Concise syntax** - Less boilerplate code
 - **Ideal for DTOs** - Data Transfer Objects should be immutable
 
 ### Complete Flow: Request → Endpoint → Response
@@ -445,7 +431,7 @@ All these models are defined as **records** in C# because:
 graph LR
     A["HTTP Client"] -->|"GetClubRequest"| B["Endpoint GetClub"]
     B -->|"Business logic"| C["GetClubHandler"]
-    C -->|"Database query"| D["Repository"]
+    C -->|"Query DB"| D["Repository"]
     D -->|"Club entity"| C
     C -->|"ClubResponse"| B
     B -->|"JSON"| A
@@ -456,7 +442,7 @@ graph LR
     style D fill:#4169E1,stroke:#00008B,color:#fff
 ```
 
-With this solid foundation of data contracts, we are ready to migrate the endpoints.
+With this solid foundation of data contracts, we're ready to migrate the endpoints.
 
 ---
 
@@ -486,12 +472,12 @@ However, when working with **FastEndpoints**, the library provides its own `Fast
 
 **Native integration** - Understands FastEndpoints structure without additional manual configuration  
 **Automatic discovery** - FastEndpoints endpoints are automatically documented in Swagger  
-**Fewer dependencies** - Single specialized library vs. multiple generic packages  
+**Fewer dependencies** - A single specialized library vs. multiple generic packages  
 **Simplified configuration** - Just two lines in Program.cs (`AddFastEndpoints()` and `SwaggerDocument()`)  
 **Consistency** - Documentation reflects exactly how FastEndpoints works internally  
 **Fluent API** - FastEndpoints helper methods (`.WithTags()`, `.WithDescription()`, `.Produces()`) generate correct documentation automatically  
 
-In this guide we opt for **FastEndpoints.Swagger** due to its cleaner, more direct and natural integration with the **REPR** pattern implemented through FastEndpoints.
+In this guide, we opted for **FastEndpoints.Swagger** due to its cleaner, more direct, and natural integration with the **REPR** pattern implemented via FastEndpoints.
 
 ---
 
@@ -522,7 +508,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Activate FastEndpoints with route prefix
+// Enable FastEndpoints with route prefix
 app.UseFastEndpoints(c => c.Endpoints.RoutePrefix = "api");
 app.UseSwaggerGen();
 
@@ -585,11 +571,11 @@ public class GetClub : Endpoint<GetClubRequest, ClubResponse>
 }
 ```
 
-**FastEndpoints features**:
+**FastEndpoints Features**:
 - Inherits from `Endpoint<TRequest, TResponse>`
 - The `Configure()` method defines the route and configuration
 - `HandleAsync()` automatically receives the deserialized request
-- Helper methods like `SendOkAsync()`, `SendNotFoundAsync()`
+- Helper methods like `Send.OkAsync()`, `Send.NotFoundAsync()`
 
 **Next step**: Remove the `GetClub` method from `ClubsController`.
 
@@ -649,7 +635,7 @@ public class CreateClub : Endpoint<CreateClubRequest>
 }
 ```
 
-**Note**: `SendCreatedAtAsync<GetClub>()` automatically generates the location URL using the GetClub endpoint.
+**Note**: `Send.CreatedAtAsync<GetClub>()` automatically generates the location URL using the GetClub endpoint.
 
 **Next step**: Remove the `CreateClub` method from `ClubsController`.
 
@@ -722,11 +708,11 @@ Endpoints/Clubs/
 Controllers/ClubsController.cs  (now empty, can be deleted)
 ```
 
-**Test endpoints**: We can test the endpoints in Swagger:
+**Testing endpoints**: We can test the endpoints in Swagger:
 ```bash
 dotnet run --project .\src\SwimTracker.Api.REPR\SwimTracker.Api.REPR.csproj
 
-# You can verify at http://localhost:5000/swagger:
+# Can be verified at http://localhost:5000/swagger:
 GET    /api/clubs
 GET    /api/clubs/{id}
 POST   /api/clubs
@@ -734,9 +720,9 @@ POST   /api/clubs
 
 ---
 
-## Part 2: Custom Implementation without Libraries
+## Part 2: Custom Implementation Without Libraries
 
-Now we will see how to implement **REPR** **without third-party dependencies**, giving you total control over the pattern. We will migrate `SwimmersController` using this approach.
+Now we'll see how to implement **REPR** **without third-party dependencies**, giving you total control over the pattern. We'll migrate `SwimmersController` using this approach.
 
 ### Step 1: Create the IEndpoint Interface
 
@@ -814,9 +800,9 @@ public class GetSwimmers : IEndpoint
 }
 ```
 
-In this custom endpoint you can see how ASP.NET Core's Minimal API is leveraged:
+In this custom endpoint you can see how we leverage ASP.NET Core's Minimal API:
 
-- Uses `app.MapGet()` from ASP.NET Core Minimal API
+- Uses `app.MapGet()` from ASP.NET Core's Minimal API
 - `HandleAsync` is a private method, not public (encapsulation)
 - Returns `IResult` instead of `IActionResult`
 - Dependency injection works automatically in the method parameters
@@ -879,7 +865,7 @@ public class GetSwimmer : IEndpoint
 }
 ```
 
-**Note**: The `Guid id` parameter is automatically extracted from the route `/api/swimmers/{id:guid}`. ASP.NET Core performs the binding automatically.
+**Note**: The `Guid id` parameter is automatically extracted from the `/api/swimmers/{id:guid}` route. ASP.NET Core performs the binding automatically.
 
 **Next step**: Remove the `GetSwimmer` method from `SwimmersController`.
 
@@ -938,13 +924,13 @@ public class CreateSwimmer : IEndpoint
 }
 ```
 
-**Note**: The `CreateSwimmerRequest request` parameter is automatically deserialized from the JSON body of the HTTP request.
+**Note**: The `CreateSwimmerRequest request` parameter is automatically deserialized from the JSON request body.
 
-**Next step**: Remove the last method from `SwimmersController` and the complete file.
+**Next step**: Remove the last method from `SwimmersController` and the entire file.
 
 ### Step 5: Create the Automatic Registration System
 
-With the three endpoints created, the next step is to implement a system to automatically register them in the DI container. For this, we create `Extensions/EndpointExtensions.cs`:
+With the three endpoints created, the next step is to implement a system to register them automatically in the DI container. For this, we create `Extensions/EndpointExtensions.cs`:
 
 ```csharp
 using SwimTracker.Api.REPR.Endpoints;
@@ -975,11 +961,11 @@ public static class EndpointExtensions
     /// Maps the registered API endpoints to the specified route builder.
     /// 
     /// How it works:
-    /// 1. Gets all instances of IEndpoint from the DI container
+    /// 1. Gets all IEndpoint instances from the DI container
     /// 2. Iterates over each endpoint
     /// 3. Calls MapEndpoint() on each one, allowing it to self-configure
     /// 
-    /// This eliminates the need to manually configure each route.
+    /// This eliminates the need to configure each route manually.
     /// </summary>
     /// <param name="app">The application builder.</param>
     /// <param name="routeGroupBuilder">An optional route group builder.</param>
@@ -1051,14 +1037,14 @@ Endpoints/Swimmers/
    ├─ GetSwimmer.cs    (custom implementation)
    └─ CreateSwimmer.cs (custom implementation)
 
-Controllers/SwimmersController.cs  (completely deleted)
+Controllers/SwimmersController.cs  (completely removed)
 ```
 
-**Test endpoints**: To verify the functionality:
+**Testing endpoints**: To verify functionality:
 ```bash
 dotnet run --project .\src\SwimTracker.Api.REPR\SwimTracker.Api.REPR.csproj
 
-# You can verify in Swagger:
+# Can be verified in Swagger:
 GET    /api/swimmers
 GET    /api/swimmers/{id}
 POST   /api/swimmers
@@ -1070,15 +1056,15 @@ POST   /api/swimmers
 
 **Consider FastEndpoints if**:
 - You need advanced features (validation, complex authentication, versioning)
-- You value immediate productivity
+- You're looking for immediate productivity
 - You don't mind adding an external dependency
 - You value an opinionated and consistent API
 
 **Consider a Custom Implementation if**:
 - You prefer zero third-party dependencies
 - You value complete control over the code
-- Your team is already familiar with ASP.NET Core Minimal API
-- You want an extremely lightweight solution
+- Your team is already familiar with ASP.NET Core's Minimal API
+- You're looking for an extremely lightweight solution
 
 ---
 
@@ -1120,7 +1106,7 @@ docker compose up
 # Run the application
 dotnet run --project .\src\SwimTracker.Api.REPR\SwimTracker.Api.REPR.csproj
 
-# Check in Swagger (http://localhost:5000/swagger):
+# Verify in Swagger (http://localhost:5000/swagger):
 
 # CLUBS (FastEndpoints)
 GET    /api/clubs                    ← Get all clubs
@@ -1137,30 +1123,30 @@ POST   /api/swimmers                 ← Create a new swimmer
 
 ## Conclusion
 
-In this guide we have explored **two different ways** to implement the REPR pattern in ASP.NET Core:
+In this guide we've explored **two different ways** to implement the REPR pattern in ASP.NET Core:
 
 **FastEndpoints** - Fast productivity with a feature-rich library  
 **Custom Implementation** - Complete control without external dependencies
 
 Both approaches provide:
-- **Scalable architecture** that grows seamlessly
+- **Scalable architecture** that grows without problems
 - **More testable code** - each endpoint is an isolated unit
 - **Teams working in parallel** without merge conflicts
 - **Granular configuration** - each operation has its own policy
 - **Simplified maintenance** - immediate location of logic
 
 **Which approach to choose?** The choice depends on the specific needs of each project:
-- **FastEndpoints** can be a good option if you value productivity and advanced features
+- **FastEndpoints** may be a good option if you value productivity and advanced features
 - **Custom implementation** may be preferable if you want complete control and zero dependencies
 
-With these tools, it is possible to **modernize APIs** and apply the **Single Responsibility** principle at the endpoint level.
+With these tools, it's possible to **modernize APIs** and apply the **Single Responsibility** principle at the endpoint level.
 
 ---
 
 ## Additional Resources
 
 - **REPR Design Pattern**: [DevIQ - REPR Pattern Guide](https://deviq.com/design-patterns/repr-design-pattern/)
-- **Project Repository**: [github.com/your-user/swim-tracker](https://github.com/)
+- **Project Source Code**: [SwimTracker.Api.REPR on GitHub](https://github.com/alexicaballero/swim-tracker/tree/main/src/SwimTracker.Api.REPR)
 - **FastEndpoints Documentation**: [https://fast-endpoints.com/](https://fast-endpoints.com/)
 - **ASP.NET Core Minimal APIs**: [Microsoft Docs](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis)
 - **REPR Pattern Discussion**: [Reddit r/dotnet](https://www.reddit.com/r/dotnet/)

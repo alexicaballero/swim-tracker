@@ -88,7 +88,7 @@ using SwimTracker.Application.Clubs.CreateClub;
 using SwimTracker.Application.Clubs.GetClub;
 using SwimTracker.Application.Clubs.GetClubs;
 
-namespace SwimTracker.Api.REPR.Controllers;
+namespace SwimTracker.Api.Controllers.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -97,7 +97,7 @@ public class ClubsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetClub(
         Guid id,
-        IRequestHandler<GetClubRequest, ClubResponse> requestHandler,
+        IRequestHandler<GetClubRequest, GetClubResponse> requestHandler,
         CancellationToken cancellationToken)
     {
         var request = new GetClubRequest(id);
@@ -226,13 +226,19 @@ public class SwimmersController : ControllerBase
 
 ## Contratos de Datos: Request y Response
 
-Antes de migrar los controladores, es fundamental entender los **contratos de datos** que definen cómo fluye la información en nuestra API. El patrón **REPR** no es solo sobre endpoints — es **Re**quest-**E**ndpoint-**R**esponse, donde cada pieza tiene un rol específico:
+Antes de migrar los controladores, es fundamental entender los **contratos de datos** que definen cómo fluye la información en nuestra API. El patrón **REPR** no es solo sobre endpoints, es **Re**quest-**E**ndpoint-**R**esponse, donde cada pieza tiene un rol específico:
 
 - **Request**: Define qué datos recibe el endpoint del cliente
 - **Response**: Define qué datos devuelve el endpoint al cliente
 - **Endpoint**: Orquesta la lógica entre ambos
 
-En **Clean Architecture**, estos contratos viven en la **capa de Application** (casos de uso), no en la capa de presentación (API). Esto permite reutilizar los mismos contratos independientemente de si usas Controllers, FastEndpoints, o Minimal APIs.
+En **Clean Architecture**, es una **práctica recomendada** ubicar estos contratos en la **capa de Application** (casos de uso), no en la capa de presentación (API). Esta decisión arquitectónica ofrece ventajas significativas:
+
+- **Reutilización**: Los mismos contratos funcionan con Controllers, FastEndpoints, o Minimal APIs
+- **Desacoplamiento**: La presentación no depende de los detalles internos
+- **Testabilidad**: Facilita testear la lógica sin la capa de presentación
+
+Sin embargo, esta no es una "verdad absoluta". En algunos contextos (como proyectos pequeños, equipos independientes, o cuando cada API tiene casos de uso muy específicos) puede ser válido mantener los contratos en la capa de presentación. La decisión debe tomarse considerando la complejidad, escala y necesidades reales del proyecto.
 
 ### Estructura en el Proyecto
 
@@ -262,30 +268,10 @@ using SwimTracker.Application.Abstractions.Messaging;
 
 namespace SwimTracker.Application.Clubs.GetClub;
 
-public sealed record GetClubRequest(Guid id) : IRequest<ClubResponse>;
+public sealed record GetClubRequest(Guid Id) : IRequest<GetClubResponse>;
 ```
 
 **Propósito**: Solicitar un club específico por su ID.
-
-#### ClubResponse.cs
-
-```csharp
-namespace SwimTracker.Application.Clubs.GetClub;
-
-public sealed record ClubResponse(
-    Guid Id,
-    string Name,
-    string Acronym,
-    string CountryCode,
-    string City,
-    string? Address,
-    string? Phone,
-    string Email,
-    string? FederationMemberId,
-    string? LogoUrl);
-```
-
-**Propósito**: Devolver los detalles completos de un club.
 
 #### CreateClubRequest.cs
 
@@ -309,9 +295,9 @@ public record CreateClubRequest(
 #### GetClubsResponse.cs
 
 ```csharp
-namespace SwimTracker.Application.Clubs.GetClubs;
+namespace SwimTracker.Application.Clubs.GetClub;
 
-public record GetClubsResponse(
+public sealed record GetClubResponse(
     Guid Id,
     string Name,
     string Acronym,
@@ -589,7 +575,7 @@ public class GetClub : Endpoint<GetClubRequest, ClubResponse>
 - Hereda de `Endpoint<TRequest, TResponse>`
 - El método `Configure()` define la ruta y configuración
 - `HandleAsync()` recibe automáticamente el request deserializado
-- Métodos helper como `SendOkAsync()`, `SendNotFoundAsync()`
+- Métodos helper como `Send.OkAsync()`, `Send.NotFoundAsync()`
 
 **Siguiente paso**: Eliminar el método `GetClub` del `ClubsController`.
 
@@ -649,7 +635,7 @@ public class CreateClub : Endpoint<CreateClubRequest>
 }
 ```
 
-**Nota**: `SendCreatedAtAsync<GetClub>()` genera automáticamente la URL de ubicación usando el endpoint de GetClub.
+**Nota**: `Send.CreatedAtAsync<GetClub>()` genera automáticamente la URL de ubicación usando el endpoint de GetClub.
 
 **Siguiente paso**: Eliminar el método `CreateClub` del `ClubsController`.
 
@@ -1160,7 +1146,7 @@ Con estas herramientas, es posible **modernizar APIs** y aplicar el principio de
 ## Recursos Adicionales
 
 - **REPR Design Pattern**: [DevIQ - REPR Pattern Guide](https://deviq.com/design-patterns/repr-design-pattern/)
-- **Repositorio del proyecto**: [github.com/tu-usuario/swim-tracker](https://github.com/)
+- **Código fuente del proyecto**: [SwimTracker.Api.REPR en GitHub](https://github.com/alexicaballero/swim-tracker/tree/main/src/SwimTracker.Api.REPR)
 - **FastEndpoints Documentation**: [https://fast-endpoints.com/](https://fast-endpoints.com/)
 - **ASP.NET Core Minimal APIs**: [Microsoft Docs](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis)
 - **REPR Pattern Discussion**: [Reddit r/dotnet](https://www.reddit.com/r/dotnet/)
