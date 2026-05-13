@@ -5,8 +5,16 @@ using SwimTracker.Api.Endpoints.Weatherforecast;
 
 namespace SwimTracker.Api.Extensions;
 
+/// <summary>
+/// Extension methods for registering and mapping API endpoints.
+/// </summary>
 public static class EndpointExtensions
 {
+    /// <summary>
+    /// Registers all endpoint implementations with the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection to add endpoints to.</param>
+    /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddEndpoints(this IServiceCollection services)
     {
         //Assembly assembly = Assembly.GetExecutingAssembly();
@@ -33,6 +41,12 @@ public static class EndpointExtensions
         return services;
     }
 
+    /// <summary>
+    /// Maps all registered endpoints to the application's routing pipeline.
+    /// </summary>
+    /// <param name="app">The web application instance.</param>
+    /// <param name="routeGroupBuilder">Optional route group builder for grouping endpoints.</param>
+    /// <returns>The application builder.</returns>
     public static IApplicationBuilder MapEndpoints(
         this WebApplication app,
         RouteGroupBuilder? routeGroupBuilder = null)
