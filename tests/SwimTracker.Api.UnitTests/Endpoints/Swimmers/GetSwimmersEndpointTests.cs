@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
 using SwimTracker.Application.Abstractions.Messaging;
 using SwimTracker.Application.Swimmers.GetSwimmers;
@@ -60,10 +61,13 @@ public class GetSwimmersEndpointTests
             .ReturnsAsync(Result.Success(swimmers));
 
         // Act
-        var statusCode = await ExecuteEndpoint();
+        var result = await ExecuteEndpoint();
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status200OK);
+        result.Should().BeOfType<Ok<List<GetSwimmersResponse>>>();
+        var okResult = (Ok<List<GetSwimmersResponse>>)result;
+        okResult.Value.Should().HaveCount(2);
+        okResult.Value.Should().BeEquivalentTo(swimmers);
         _handlerMock.Verify(h => h.HandleAsync(_cancellationToken), Times.Once);
     }
 
@@ -78,15 +82,17 @@ public class GetSwimmersEndpointTests
             .ReturnsAsync(Result.Success(swimmers));
 
         // Act
-        var statusCode = await ExecuteEndpoint();
+        var result = await ExecuteEndpoint();
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status200OK);
+        result.Should().BeOfType<Ok<List<GetSwimmersResponse>>>();
+        var okResult = (Ok<List<GetSwimmersResponse>>)result;
+        okResult.Value.Should().BeEmpty();
         _handlerMock.Verify(h => h.HandleAsync(_cancellationToken), Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_WhenHandlerFails_ReturnsNotFound()
+    public async Task HandleAsync_WhenHandlerFails_ReturnsProblem()
     {
         // Arrange
         var error = new Error("Swimmers.Error", "Error retrieving swimmers");
@@ -96,10 +102,13 @@ public class GetSwimmersEndpointTests
             .ReturnsAsync(Result.Failure<List<GetSwimmersResponse>>(error));
 
         // Act
-        var statusCode = await ExecuteEndpoint();
+        var result = await ExecuteEndpoint();
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status404NotFound);
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
         _handlerMock.Verify(h => h.HandleAsync(_cancellationToken), Times.Once);
     }
 
@@ -130,30 +139,31 @@ public class GetSwimmersEndpointTests
             .ReturnsAsync(Result.Success(swimmers));
 
         // Act
-        var statusCode = await ExecuteEndpoint();
+        var result = await ExecuteEndpoint();
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status200OK);
+        result.Should().BeOfType<Ok<List<GetSwimmersResponse>>>();
         _handlerMock.Verify(h => h.HandleAsync(_cancellationToken), Times.Once);
     }
 
-    private async Task<int> ExecuteEndpoint()
+    private async Task<IResult> ExecuteEndpoint()
     {
         // Simula la lógica del endpoint
         var handler = _handlerMock.Object;
         var result = await handler.HandleAsync(_cancellationToken);
 
-        var context = _httpContext;
-        
         if (result.IsSuccess)
         {
-            context.Response.StatusCode = StatusCodes.Status200OK;
-        }
-        else
-        {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return Results.Ok(result.Value);
         }
 
-        return context.Response.StatusCode;
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
+        {
+            Type = result.Error.Code,
+            Title = "Failed to retrieve swimmers",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status500InternalServerError,
+            Instance = _httpContext.Request.Path
+        });
     }
 }

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SwimTracker.Api.ProblemDetails.Endpoints;
 using SwimTracker.Application.Clubs.CreateClub;
 
-namespace SwimTracker.Api.Endpoints.Clubs;
+namespace SwimTracker.Api.ProblemDetails.Endpoints.Clubs;
 
 /// <summary>
 /// Endpoint for creating a new club.
@@ -41,7 +42,7 @@ public class CreateClub : IEndpoint
             return Results.Created($"api/clubs/{request.Name}", request);
         }
 
-        return Results.Problem(new ProblemDetails
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
             Type = result.Error.Code,
             Title = "Club creation failed",

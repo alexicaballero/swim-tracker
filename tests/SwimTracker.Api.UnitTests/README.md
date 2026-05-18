@@ -19,6 +19,12 @@ SwimTracker.Api.UnitTests/
 │       ├── CreateSwimmerEndpointTests.cs
 │       ├── GetSwimmerEndpointTests.cs
 │       └── GetSwimmersEndpointTests.cs
+├── ExceptionHandling/
+│   └── GlobalExceptionHandlerTests.cs
+├── ProblemDetails/
+│   ├── ProblemDetailsFormatTests.cs
+│   ├── ClubEndpointProblemDetailsTests.cs
+│   └── SwimmerEndpointProblemDetailsTests.cs
 └── SwimTracker.Api.UnitTests.csproj
 ```
 
@@ -67,6 +73,35 @@ SwimTracker.Api.UnitTests/
 - Manejo de errores en la obtención
 - Obtención con múltiples nadadores
 
+### Manejo de Excepciones
+
+#### GlobalExceptionHandlerTests (14 pruebas)
+- Mapeo de excepciones a códigos HTTP (ArgumentException, KeyNotFoundException, ApplicationException, etc.)
+- Generación correcta de Problem Details
+- Inclusión/exclusión de detalles de excepción según el ambiente (desarrollo vs producción)
+- Inclusión de propiedades de traza (requestId, traceId, timestamp)
+- Serialización correcta a JSON
+
+### Problem Details - Validación de Formato RFC 9457
+
+#### ProblemDetailsFormatTests (12 pruebas)
+- Validación de propiedades requeridas (type, status, title)
+- Validación de propiedades opcionales (detail, instance)
+- Validación de extensiones personalizadas
+- Mapeo correcto de códigos de estado HTTP
+- Serialización a JSON
+
+#### ClubEndpointProblemDetailsTests (6 pruebas)
+- Validación de Problem Details en errores de GetClub
+- Validación de Problem Details en errores de CreateClub
+- Validación de propiedades RFC 9457 en respuestas de error
+
+#### SwimmerEndpointProblemDetailsTests (10 pruebas)
+- Validación de Problem Details en errores de GetSwimmer
+- Validación de Problem Details en errores de CreateSwimmer
+- Mapeo correcto de tipos de error a códigos de estado
+- Serialización correcta de respuestas de error
+
 ## Ejecución de Pruebas
 
 ### Ejecutar todas las pruebas
@@ -96,10 +131,10 @@ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 
 ## Estadísticas
 
-- **Total de pruebas**: 20
-- **Pruebas exitosas**: 20
+- **Total de pruebas**: 56
+- **Pruebas exitosas**: 56
 - **Pruebas fallidas**: 0
-- **Cobertura estimada**: Alta cobertura de los endpoints principales
+- **Cobertura estimada**: Alta cobertura de endpoints, manejo de excepciones y formato Problem Details
 
 ## Enfoque de las Pruebas
 
@@ -110,6 +145,17 @@ Las pruebas en este proyecto son **pruebas unitarias puras**:
 3. **Velocidad**: Las pruebas son rápidas y pueden ejecutarse frecuentemente
 4. **Sin dependencias externas**: No requieren base de datos, servicios web, o infraestructura externa
 5. **Comportamiento del endpoint**: Se verifica que los endpoints retornen los resultados correctos según la respuesta del handler
+
+### Pruebas de Problem Details y Manejo de Excepciones
+
+Las pruebas incluyen validación completa de la implementación de **RFC 9457 Problem Details**:
+
+- **Validación de Formato**: Verifica que todas las respuestas de error cumplan con la estructura definida en RFC 9457
+- **Mapeo de Excepciones**: Verifica que diferentes tipos de excepciones se mapeen a los códigos HTTP correctos
+- **Propiedades Requeridas**: Valida la presencia de `type`, `status`, `title` en todas las respuestas
+- **Propiedades Opcionales**: Valida la presencia de `detail`, `instance` cuando aplique
+- **Extensiones**: Valida la presencia de propiedades adicionales como `requestId`, `traceId`, `timestamp`
+- **Ambiente-Aware**: Verifica que en desarrollo se incluyan detalles de excepciones, pero en producción no
 
 ## Patrón de Pruebas
 
@@ -164,7 +210,15 @@ Al agregar nuevos endpoints al API:
 ## Últimos Resultados
 
 ```
-Test summary: total: 20; failed: 0; succeeded: 20; skipped: 0
+Test summary: total: 56; failed: 0; succeeded: 56; skipped: 0
 ```
 
 Todas las pruebas están pasando exitosamente.
+
+### Pruebas por Categoría
+
+- **Endpoint Tests**: 20 pruebas
+- **Exception Handling Tests**: 14 pruebas  
+- **Problem Details Format Tests**: 12 pruebas
+- **Endpoint Problem Details Tests**: 10 pruebas (Clubs)
+- **Endpoint Problem Details Tests**: 10 pruebas (Swimmers)

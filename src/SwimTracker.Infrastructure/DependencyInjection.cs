@@ -6,6 +6,8 @@ using SwimTracker.Application.Clubs;
 using SwimTracker.Application.Swimmers;
 using SwimTracker.Infrastructure.Persistence;
 using SwimTracker.Infrastructure.Persistence.Repositories;
+using SwimTracker.Infrastructure.Time;
+using SwimTracker.SharedKernel;
 
 namespace SwimTracker.Infrastructure;
 
@@ -13,6 +15,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         AddPersistency(services, configuration);
 
         return services;
@@ -27,8 +30,8 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString, npSqlOptions =>
             {
                 npSqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
                     errorCodesToAdd: null);
             });
         });

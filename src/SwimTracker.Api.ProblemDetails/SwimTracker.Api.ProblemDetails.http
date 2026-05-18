@@ -1,8 +1,4 @@
-@SwimTracker.Api_HostAddress = http://localhost:5227
-
-### Get Weather Forecast
-GET {{SwimTracker.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@SwimTracker.Api_HostAddress = http://localhost:5033
 
 ### Get Club by ID
 
@@ -65,7 +61,7 @@ Content-Type: application/json
     "dateOfBirth": "2015-05-24",
     "gender": "Male",
     "nationality": "COL",
-    "email": "angel.caballero@example.com",
+    "email": "angel.caballero__example.com",
     "phone": "316-880-0776",    
     "licenseNumber": "ABC123456",
     "licenseStatus": "Active",
@@ -73,7 +69,8 @@ Content-Type: application/json
 }
 
 
-### Create New Swimmer 3
+### Create New Swimmer 3 - Validation Error (Invalid Email Format)
+### Tests ProblemDetails error code 400 with invalid email format
 POST {{SwimTracker.Api_HostAddress}}/api/swimmers
 Content-Type: application/json
 
@@ -84,7 +81,26 @@ Content-Type: application/json
     "dateOfBirth": "2007-08-22",
     "gender": "Female",
     "nationality": "COL",
-    "email": "maria.fernanda.caballero##example.com",
+    "email": "maria.fernanda.caballero$example.com",
+    "phone": "316-880-0776",    
+    "licenseNumber": "ABC123457",
+    "licenseStatus": "Active",
+    "licenseExpiresAt": "2030-12-31"
+}
+
+### Create New Swimmer 4 - Not Found Error (Club Does Not Exist)
+### Tests ProblemDetails error code 400 when referenced club ID does not exist
+POST {{SwimTracker.Api_HostAddress}}/api/swimmers
+Content-Type: application/json
+
+{
+    "clubId": "14379f22-c891-4d61-ab9d-9ab460b3b322",
+    "firstName": "Maria Fernanda",
+    "lastName": "Caballero",
+    "dateOfBirth": "2007-08-22",
+    "gender": "Female",
+    "nationality": "COL",
+    "email": "maria.fernanda.caballero@example.com",
     "phone": "316-880-0776",    
     "licenseNumber": "ABC123457",
     "licenseStatus": "Active",

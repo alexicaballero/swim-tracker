@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using SwimTracker.Api.ProblemDetails.Endpoints;
 using SwimTracker.Application.Swimmers.CreateSwimmer;
 
-namespace SwimTracker.Api.Endpoints.Swimmers;
+namespace SwimTracker.Api.ProblemDetails.Endpoints.Swimmers;
 
 /// <summary>
 /// Endpoint for creating a new swimmer.
@@ -37,7 +38,7 @@ public class CreateSwimmer : IEndpoint
             return Results.Ok(result.Value);
         }
 
-        return Results.Problem(new ProblemDetails
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
             Type = result.Error.Code,
             Title = "Swimmer creation failed",

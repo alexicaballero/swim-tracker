@@ -1,6 +1,7 @@
-﻿using SwimTracker.Application.Clubs.GetClub;
+﻿using SwimTracker.Api.ProblemDetails.Endpoints;
+using SwimTracker.Application.Clubs.GetClub;
 
-namespace SwimTracker.Api.Endpoints.Clubs;
+namespace SwimTracker.Api.ProblemDetails.Endpoints.Clubs;
 
 /// <summary>
 /// Endpoint for retrieving a club by its ID.

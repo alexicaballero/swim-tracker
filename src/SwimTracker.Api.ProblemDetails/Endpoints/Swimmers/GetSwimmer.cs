@@ -1,35 +1,35 @@
-﻿using SwimTracker.Application.Clubs.GetClub;
+using SwimTracker.Api.ProblemDetails.Endpoints;
+using SwimTracker.Application.Swimmers.GetSwimmer;
 
-namespace SwimTracker.Api.Endpoints.Clubs;
+namespace SwimTracker.Api.ProblemDetails.Endpoints.Swimmers;
 
 /// <summary>
-/// Endpoint for retrieving a club by its ID.
+/// Endpoint for retrieving a swimmer by ID.
 /// </summary>
-public class GetClub : IEndpoint
+public class GetSwimmer : IEndpoint
 {
     /// <summary>
-    /// Maps the endpoint for retrieving a club by its ID.
+    /// Maps the GET endpoint for retrieving a swimmer.
     /// </summary>
     /// <param name="app">The endpoint route builder.</param>
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/clubs/{id:guid}", HandleAsync)
-            .WithTags("Clubs");
+        app.MapGet("api/swimmers/{id:guid}", HandleAsync)
+            .WithTags("Swimmers");
     }
 
     /// <summary>
-    /// Handles the GET request to retrieve a club by its ID.
+    /// Handles the GET request for a swimmer by ID.
     /// </summary>
-    /// <param name="id">The ID of the club to retrieve.</param>
-    /// <param name="requestHandler">The handler for processing the request.</param>
+    /// <param name="id">The swimmer's unique identifier.</param>
+    /// <param name="requestHandler">The request handler for GetSwimmer.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The result of the club retrieval.</returns>
     private async Task<IResult> HandleAsync(
         Guid id,
-        IRequestHandler<GetClubRequest, GetClubResponse> requestHandler,
+        IRequestHandler<GetSwimmerRequest, GetSwimmerResponse> requestHandler,
         CancellationToken cancellationToken)
     {
-        var request = new GetClubRequest(id);
+        var request = new GetSwimmerRequest(id);
         var result = await requestHandler.HandleAsync(request, cancellationToken);
 
         if (result.IsSuccess)
@@ -40,7 +40,7 @@ public class GetClub : IEndpoint
         return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
             Type = result.Error.Code,
-            Title = "Club not found",
+            Title = "Swimmer not found",
             Detail = result.Error.Description,
             Status = StatusCodes.Status404NotFound
         });

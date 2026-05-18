@@ -26,17 +26,17 @@ internal sealed class SwimmerRepository : ISwimmerRepository
         return _dbContext.Swimmers.ToListAsync(cancellationToken);
     }
 
-    public void AddAsync(Swimmer swimmer)
+    public void Add(Swimmer swimmer)
     {
         _dbContext.Swimmers.Add(swimmer);
     }
 
-    public void DeleteAsync(Swimmer swimmer)
+    public void Delete(Swimmer swimmer)
     {
         _dbContext.Swimmers.Remove(swimmer);
     }
 
-    public void UpdateAsync(Swimmer swimmer)
+    public void Update(Swimmer swimmer)
     {
         _dbContext.Swimmers.Update(swimmer);
     }

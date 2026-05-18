@@ -69,7 +69,7 @@ public class GetClubsEndpointTests
     }
 
     [Fact]
-    public async Task HandleAsync_WhenHandlerFails_ReturnsNotFound()
+    public async Task HandleAsync_WhenHandlerFails_ReturnsProblem()
     {
         // Arrange
         var error = new Error("Clubs.Error", "Error retrieving clubs");
@@ -82,7 +82,10 @@ public class GetClubsEndpointTests
         var result = await ExecuteEndpoint();
 
         // Assert
-        result.Should().BeOfType<NotFound>();
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
 
         _handlerMock.Verify(h => h.HandleAsync(_cancellationToken), Times.Once);
     }
@@ -97,9 +100,13 @@ public class GetClubsEndpointTests
         {
             return Results.Ok(result.Value);
         }
-        else
+
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            return Results.NotFound();
-        }
+            Type = result.Error.Code,
+            Title = "Failed to retrieve clubs",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status500InternalServerError
+        });
     }
 }

@@ -11,12 +11,12 @@ namespace SwimTracker.Api.UnitTests.Endpoints.Clubs;
 
 public class GetClubEndpointTests
 {
-    private readonly Mock<IRequestHandler<GetClubRequest, ClubResponse>> _handlerMock;
+    private readonly Mock<IRequestHandler<GetClubRequest, GetClubResponse>> _handlerMock;
     private readonly CancellationToken _cancellationToken;
 
     public GetClubEndpointTests()
     {
-        _handlerMock = new Mock<IRequestHandler<GetClubRequest, ClubResponse>>();
+        _handlerMock = new Mock<IRequestHandler<GetClubRequest, GetClubResponse>>();
         _cancellationToken = CancellationToken.None;
     }
 
@@ -26,7 +26,7 @@ public class GetClubEndpointTests
         // Arrange
         var clubId = Guid.NewGuid();
         var request = new GetClubRequest(clubId);
-        var clubResponse = new ClubResponse(
+        var clubResponse = new GetClubResponse(
             Id: clubId,
             Name: "Test Club",
             Acronym: "TC",
@@ -46,11 +46,11 @@ public class GetClubEndpointTests
         var result = await ExecuteEndpoint(clubId);
 
         // Assert
-        result.Should().BeOfType<Ok<ClubResponse>>();
-        var okResult = (Ok<ClubResponse>)result;
+        result.Should().BeOfType<Ok<GetClubResponse>>();
+        var okResult = (Ok<GetClubResponse>)result;
         okResult.Value.Should().BeEquivalentTo(clubResponse);
 
-        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.id == clubId), _cancellationToken), Times.Once);
+        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.Id == clubId), _cancellationToken), Times.Once);
     }
 
     [Fact]
@@ -63,15 +63,18 @@ public class GetClubEndpointTests
 
         _handlerMock
             .Setup(h => h.HandleAsync(request, _cancellationToken))
-            .ReturnsAsync(Result.Failure<ClubResponse>(error));
+            .ReturnsAsync(Result.Failure<GetClubResponse>(error));
 
         // Act
         var result = await ExecuteEndpoint(clubId);
 
         // Assert
-        result.Should().BeOfType<NotFound>();
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
 
-        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.id == clubId), _cancellationToken), Times.Once);
+        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.Id == clubId), _cancellationToken), Times.Once);
     }
 
     [Fact]
@@ -84,14 +87,16 @@ public class GetClubEndpointTests
 
         _handlerMock
             .Setup(h => h.HandleAsync(request, _cancellationToken))
-            .ReturnsAsync(Result.Failure<ClubResponse>(error));
+            .ReturnsAsync(Result.Failure<GetClubResponse>(error));
 
         // Act
         var result = await ExecuteEndpoint(clubId);
 
         // Assert
-        result.Should().BeOfType<NotFound>();
-        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.id == clubId), _cancellationToken), Times.Once);
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        _handlerMock.Verify(h => h.HandleAsync(It.Is<GetClubRequest>(r => r.Id == clubId), _cancellationToken), Times.Once);
     }
 
     private async Task<IResult> ExecuteEndpoint(Guid id)
@@ -105,9 +110,13 @@ public class GetClubEndpointTests
         {
             return Results.Ok(result.Value);
         }
-        else
+
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            return Results.NotFound();
-        }
+            Type = result.Error.Code,
+            Title = "Club not found",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status404NotFound
+        });
     }
 }

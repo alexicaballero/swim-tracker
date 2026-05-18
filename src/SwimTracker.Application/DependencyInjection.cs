@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SwimTracker.Application.Abstractions.Validation;
 using SwimTracker.Application.Clubs.CreateClub;
 using SwimTracker.Application.Clubs.GetClub;
 using SwimTracker.Application.Clubs.GetClubs;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IHandler<List<GetClubsResponse>>, GetClubsHandler>();
 
         // Swimmers
+        services.AddScoped<IValidator<CreateSwimmerRequest>, CreateSwimmerValidator>();
         services.AddScoped<IRequestHandler<GetSwimmerRequest, GetSwimmerResponse>, GetSwimmerHandler>();
         services.AddScoped<IRequestHandler<CreateSwimmerRequest, CreateSwimmerResponse>, CreateSwimmerHandler>();
         services.AddScoped<IHandler<List<GetSwimmersResponse>>, GetSwimmersHandler>();

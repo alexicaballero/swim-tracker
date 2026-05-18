@@ -8,9 +8,9 @@ public interface ISwimmerRepository
 
     Task<List<Swimmer>> GetAllAsync(CancellationToken cancellationToken = default);
 
-    void AddAsync(Swimmer swimmer);
+    void Add(Swimmer swimmer);
 
-    void UpdateAsync(Swimmer swimmer);
+    void Update(Swimmer swimmer);
 
-    void DeleteAsync(Swimmer swimmer);
+    void Delete(Swimmer swimmer);
 }

@@ -1,7 +1,7 @@
 ﻿/// <summary>
 /// Defines a contract for mapping API endpoints to the application's route builder.
 /// </summary>
-namespace SwimTracker.Api.Endpoints;
+namespace SwimTracker.Api.ProblemDetails.Endpoints;
 
 /// <summary>
 /// Interface for defining an endpoint that can be mapped to the application's routing system.

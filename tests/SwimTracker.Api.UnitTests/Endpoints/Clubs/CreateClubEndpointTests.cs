@@ -67,9 +67,10 @@ public class CreateClubEndpointTests
         var result = await ExecuteEndpoint(request);
 
         // Assert
-        result.Should().BeOfType<BadRequest<Error>>();
-        var badRequestResult = (BadRequest<Error>)result;
-        badRequestResult.Value.Should().Be(error);
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
 
         _handlerMock.Verify(h => h.HandleAsync(request, _cancellationToken), Times.Once);
     }
@@ -94,7 +95,9 @@ public class CreateClubEndpointTests
         var result = await ExecuteEndpoint(request);
 
         // Assert
-        result.Should().BeOfType<BadRequest<Error>>();
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         _handlerMock.Verify(h => h.HandleAsync(request, _cancellationToken), Times.Once);
     }
 
@@ -108,9 +111,13 @@ public class CreateClubEndpointTests
         {
             return Results.Created($"api/clubs/{request.Name}", request);
         }
-        else
+
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            return Results.BadRequest(result.Error);
-        }
+            Type = result.Error.Code,
+            Title = "Club creation failed",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status400BadRequest
+        });
     }
 }

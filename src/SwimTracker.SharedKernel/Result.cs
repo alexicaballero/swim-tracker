@@ -32,7 +32,11 @@ public class Result
     public static Result<TValue> Failure<TValue>(Error error) =>
         new(default, false, error);
 
-    /// <summary>Implicitly converts an <see cref="Error"/> to a failed <see cref="Result"/>.</summary>
+
+    /// <summary>
+    /// Implicitly converts an <see cref="Error"/> to a failed <see cref="Result"/>.
+    /// </summary>
+    /// <param name="error">The error to convert.</param>
     public static implicit operator Result(Error error) => Failure(error);
 }
 
@@ -51,6 +55,10 @@ public class Result<TValue> : Result
         ? _value!
         : throw new InvalidOperationException("The value of a failure result can't be accessed.");
 
+    /// <summary>
+    /// Implicitly converts a <typeparamref name="TValue"/> to a successful <see cref="Result{TValue}"/>.
+    /// </summary>
+    /// <param name="value">The value to convert.</param>
     public static implicit operator Result<TValue>(TValue? value) =>
         value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
 }

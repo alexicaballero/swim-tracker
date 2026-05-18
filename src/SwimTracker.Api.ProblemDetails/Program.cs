@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
-using SwimTracker.Api.Exceptions;
-using SwimTracker.Api.Extensions;
+using SwimTracker.Api.ProblemDetails.Exceptions;
+using SwimTracker.Api.ProblemDetails.Extensions;
 using SwimTracker.Application;
 using SwimTracker.Infrastructure;
 

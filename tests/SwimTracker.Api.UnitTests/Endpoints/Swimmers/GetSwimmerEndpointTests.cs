@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
 using SwimTracker.Application.Abstractions.Messaging;
 using SwimTracker.Application.Swimmers.GetSwimmer;
 using SwimTracker.SharedKernel;
-using System.Text.Json;
 using Xunit;
 
 namespace SwimTracker.Api.UnitTests.Endpoints.Swimmers;
@@ -29,7 +29,7 @@ public class GetSwimmerEndpointTests
         var swimmerId = Guid.NewGuid();
         var clubId = Guid.NewGuid();
         var request = new GetSwimmerRequest(swimmerId);
-        
+
         var swimmerResponse = new GetSwimmerResponse(
             Id: swimmerId,
             ClubId: clubId,
@@ -49,10 +49,12 @@ public class GetSwimmerEndpointTests
             .ReturnsAsync(Result.Success(swimmerResponse));
 
         // Act
-        var statusCode = await ExecuteEndpoint(swimmerId);
+        var result = await ExecuteEndpoint(swimmerId);
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status200OK);
+        result.Should().BeOfType<Ok<GetSwimmerResponse>>();
+        var okResult = (Ok<GetSwimmerResponse>)result;
+        okResult.Value.Should().BeEquivalentTo(swimmerResponse);
         _handlerMock.Verify(h => h.HandleAsync(It.Is<GetSwimmerRequest>(r => r.Id == swimmerId), _cancellationToken), Times.Once);
     }
 
@@ -69,10 +71,13 @@ public class GetSwimmerEndpointTests
             .ReturnsAsync(Result.Failure<GetSwimmerResponse>(error));
 
         // Act
-        var statusCode = await ExecuteEndpoint(swimmerId);
+        var result = await ExecuteEndpoint(swimmerId);
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status404NotFound);
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
         _handlerMock.Verify(h => h.HandleAsync(It.Is<GetSwimmerRequest>(r => r.Id == swimmerId), _cancellationToken), Times.Once);
     }
 
@@ -89,10 +94,13 @@ public class GetSwimmerEndpointTests
             .ReturnsAsync(Result.Failure<GetSwimmerResponse>(error));
 
         // Act
-        var statusCode = await ExecuteEndpoint(swimmerId);
+        var result = await ExecuteEndpoint(swimmerId);
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status404NotFound);
+        result.Should().BeOfType<ProblemHttpResult>();
+        var problem = (ProblemHttpResult)result;
+        problem.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        problem.ProblemDetails.Type.Should().Be(error.Code);
         _handlerMock.Verify(h => h.HandleAsync(It.Is<GetSwimmerRequest>(r => r.Id == swimmerId), _cancellationToken), Times.Once);
     }
 
@@ -103,7 +111,7 @@ public class GetSwimmerEndpointTests
         var swimmerId = Guid.NewGuid();
         var clubId = Guid.NewGuid();
         var request = new GetSwimmerRequest(swimmerId);
-        
+
         var swimmerResponse = new GetSwimmerResponse(
             Id: swimmerId,
             ClubId: clubId,
@@ -123,31 +131,32 @@ public class GetSwimmerEndpointTests
             .ReturnsAsync(Result.Success(swimmerResponse));
 
         // Act
-        var statusCode = await ExecuteEndpoint(swimmerId);
+        var result = await ExecuteEndpoint(swimmerId);
 
         // Assert
-        statusCode.Should().Be(StatusCodes.Status200OK);
+        result.Should().BeOfType<Ok<GetSwimmerResponse>>();
         _handlerMock.Verify(h => h.HandleAsync(It.Is<GetSwimmerRequest>(r => r.Id == swimmerId), _cancellationToken), Times.Once);
     }
 
-    private async Task<int> ExecuteEndpoint(Guid id)
+    private async Task<IResult> ExecuteEndpoint(Guid id)
     {
         // Simula la lógica del endpoint
         var handler = _handlerMock.Object;
         var request = new GetSwimmerRequest(id);
         var result = await handler.HandleAsync(request, _cancellationToken);
 
-        var context = _httpContext;
-        
         if (result.IsSuccess)
         {
-            context.Response.StatusCode = StatusCodes.Status200OK;
-        }
-        else
-        {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return Results.Ok(result.Value);
         }
 
-        return context.Response.StatusCode;
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
+        {
+            Type = result.Error.Code,
+            Title = "Swimmer not found",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status404NotFound,
+            Instance = _httpContext.Request.Path
+        });
     }
 }

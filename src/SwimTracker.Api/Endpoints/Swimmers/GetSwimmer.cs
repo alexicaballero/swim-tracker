@@ -20,12 +20,11 @@ public class GetSwimmer : IEndpoint
     /// <summary>
     /// Handles the GET request for a swimmer by ID.
     /// </summary>
-    /// <param name="context">The HTTP context.</param>
     /// <param name="id">The swimmer's unique identifier.</param>
     /// <param name="requestHandler">The request handler for GetSwimmer.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    private async Task HandleAsync(
-        HttpContext context, Guid id,
+    private async Task<IResult> HandleAsync(
+        Guid id,
         IRequestHandler<GetSwimmerRequest, GetSwimmerResponse> requestHandler,
         CancellationToken cancellationToken)
     {
@@ -34,11 +33,15 @@ public class GetSwimmer : IEndpoint
 
         if (result.IsSuccess)
         {
-            await context.Response.WriteAsJsonAsync(result.Value, cancellationToken);
+            return Results.Ok(result.Value);
         }
-        else
+
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-        }
+            Type = result.Error.Code,
+            Title = "Swimmer not found",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status404NotFound
+        });
     }
 }

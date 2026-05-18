@@ -1,30 +1,30 @@
-using SwimTracker.Application.Clubs.GetClubs;
+using SwimTracker.Application.Swimmers.GetSwimmers;
 
-namespace SwimTracker.Api.Endpoints.Clubs;
+namespace SwimTracker.Api.ProblemDetails.Endpoints.Swimmers;
 
 /// <summary>
-/// Endpoint for retrieving a list of clubs.
+/// Endpoint for retrieving a list of swimmers.
 /// </summary>
-public class GetClubs : IEndpoint
+public class GetSwimmers : IEndpoint
 {
     /// <summary>
-    /// Maps the endpoint for retrieving a list of clubs.
+    /// Maps the GET swimmers endpoint to the route builder.
     /// </summary>
     /// <param name="app">The endpoint route builder.</param>
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/clubs", HandleAsync)
-            .WithTags("Clubs");
+        app.MapGet("api/swimmers", HandleAsync)
+            .WithTags("Swimmers");
     }
 
     /// <summary>
-    /// Handles the GET request to retrieve a list of clubs.
+    /// Handles the GET request for all swimmers.
     /// </summary>
-    /// <param name="requestHandler">The handler for processing the request.</param>
+    /// <param name="requestHandler">The handler for the request.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The result of the clubs retrieval.</returns>
+    /// <returns>The result of the operation as an IResult.</returns>
     private async Task<IResult> HandleAsync(
-        IHandler<List<GetClubsResponse>> requestHandler,
+        IHandler<List<GetSwimmersResponse>> requestHandler,
         CancellationToken cancellationToken)
     {
         var result = await requestHandler.HandleAsync(cancellationToken);
@@ -37,7 +37,7 @@ public class GetClubs : IEndpoint
         return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
             Type = result.Error.Code,
-            Title = "Failed to retrieve clubs",
+            Title = "Failed to retrieve swimmers",
             Detail = result.Error.Description,
             Status = StatusCodes.Status500InternalServerError
         });

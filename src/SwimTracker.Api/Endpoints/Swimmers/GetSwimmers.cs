@@ -1,13 +1,9 @@
 using SwimTracker.Application.Swimmers.GetSwimmers;
 
-
-/// <summary>
-/// Endpoint for retrieving a list of swimmers.
-/// </summary>
 namespace SwimTracker.Api.Endpoints.Swimmers;
 
 /// <summary>
-/// Represents the endpoint for getting swimmers.
+/// Endpoint for retrieving a list of swimmers.
 /// </summary>
 public class GetSwimmers : IEndpoint
 {
@@ -22,13 +18,12 @@ public class GetSwimmers : IEndpoint
     }
 
     /// <summary>
-    /// Handles the GET swimmers request.
+    /// Handles the GET request for all swimmers.
     /// </summary>
-    /// <param name="context">The HTTP context.</param>
     /// <param name="requestHandler">The handler for the request.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    private async Task HandleAsync(
-        HttpContext context,
+    /// <returns>The result of the operation as an IResult.</returns>
+    private async Task<IResult> HandleAsync(
         IHandler<List<GetSwimmersResponse>> requestHandler,
         CancellationToken cancellationToken)
     {
@@ -36,11 +31,15 @@ public class GetSwimmers : IEndpoint
 
         if (result.IsSuccess)
         {
-            await context.Response.WriteAsJsonAsync(result.Value, cancellationToken);
+            return Results.Ok(result.Value);
         }
-        else
+
+        return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-        }
+            Type = result.Error.Code,
+            Title = "Failed to retrieve swimmers",
+            Detail = result.Error.Description,
+            Status = StatusCodes.Status500InternalServerError
+        });
     }
 }
