@@ -10,7 +10,7 @@ In this practical guide, we will explore how to implement a **robust error handl
 
 The API structure is familiar:
 
-- **Architecture**: Clean Architecture / Hexagonal Architecture
+- **Architecture**:
   - `Domain`: Business entities (Club, Swimmer), domain logic
   - `Application`: Use cases, handlers, application services
   - `Infrastructure`: Persistence, technical implementations
@@ -18,9 +18,8 @@ The API structure is familiar:
 
 - **Implemented Patterns**:
   - **Result Pattern**: Error handling pattern used internally in the application layer (will be explored in detail in a dedicated article)
-  - **Problem Details (RFC 9457)**: Standardized format for HTTP errors
-  - **Global Exception Handler**: Centralized capture of unhandled exceptions
   - **REPR Pattern**: Individual endpoints instead of monolithic controllers
+  - **Problem Details (RFC 9457)**: Standardized format for HTTP errors ← *subject of this article*
 
 - **Technology**: PostgreSQL with Entity Framework Core
 

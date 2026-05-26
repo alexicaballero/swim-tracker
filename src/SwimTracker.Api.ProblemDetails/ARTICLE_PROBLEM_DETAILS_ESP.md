@@ -10,7 +10,7 @@ En esta guía práctica, se explorará cómo implementar un **sistema de manejo 
 
 La estructura de la API es familiar:
 
-- **Arquitectura**: Clean Architecture / Arquitectura Hexagonal
+- **Arquitectura**:
   - `Domain`: Entidades de negocio (Club, Swimmer), lógica del dominio
   - `Application`: Casos de uso, handlers, servicios de aplicación
   - `Infrastructure`: Persistencia, implementaciones técnicas
@@ -18,9 +18,8 @@ La estructura de la API es familiar:
 
 - **Patrones implementados**:
   - **Result Pattern**: Patrón de manejo de errores usado internamente en la capa de aplicación (se explorará en detalle en un artículo dedicado)
-  - **Problem Details (RFC 9457)**: Formato estandarizado de errores en HTTP
-  - **Global Exception Handler**: Captura centralizada de excepciones no controladas
   - **REPR Pattern**: Endpoints individuales en lugar de controladores monolíticos
+  - **Problem Details (RFC 9457)**: Formato estandarizado de errores en HTTP ← *tema de este artículo*
 
 - **Tecnología**: PostgreSQL con Entity Framework Core
 
