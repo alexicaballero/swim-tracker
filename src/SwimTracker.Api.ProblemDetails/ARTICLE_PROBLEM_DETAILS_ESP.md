@@ -49,6 +49,50 @@ Problem Details es un formato estandarizado definido en la RFC 9457 para transmi
 | `detail` | `string` | Explicación detallada del problema específico |
 | `instance` | `string` (URI) | Ruta específica de la solicitud que generó el error |
 
+#### Aclaraciones sobre la Propiedad `type`
+
+La RFC 9457 especifica que `type` debe ser un identificador URI que apunte a documentación legible por humanos sobre el tipo de error. Aunque existen múltiples enfoques válidos (identificadores simples, URNs, nombres de excepción), **en este proyecto se adopta el enfoque recomendado por la RFC: usar URLs completas**.
+
+**Ejemplo de respuesta con URL:**
+```json
+{
+  "type": "https://swimtracker.com/errors/problem-details/swimmer-invalid-first-name",
+  "title": "Swimmer creation failed",
+  "status": 400,
+  "detail": "First name cannot be empty"
+}
+```
+
+**¿Por qué usar URLs en lugar de identificadores simples?**
+
+✅ **Cumplimiento con el estándar**: RFC 9457 recomienda URLs que apunten a documentación  
+✅ **Experiencia del desarrollador**: Los consumidores de la API pueden seguir el enlace y leer documentación detallada  
+✅ **Identificación única**: La URL identifica claramente el error sin ambigüedades  
+✅ **Escalabilidad**: A medida que la API crece, tener URLs permite centralizar y versionar la documentación de errores  
+✅ **Consistencia**: Mismo formato para errores de negocio y excepciones técnicas
+
+**¿Qué pasa si no tengo un sitio de documentación?**
+
+Incluso sin un sitio activo, usar URLs sigue siendo beneficioso:
+
+1. **URLs como identificadores**: Aunque no resuelvan inmediatamente, siguen siendo identificadores únicos y descriptivos
+2. **Preparación para el futuro**: Cuando decidas documentar errores, las URLs ya estarán definidas
+3. **Convención sobre configuración**: Establecer un patrón consistente facilita mantenimiento
+
+**Estructura de URLs en SwimTracker:**
+
+```
+Errores de negocio:    https://swimtracker.com/errors/problem-details/{error-code-slug}
+Excepciones técnicas:  https://swimtracker.com/errors/exceptions/{exception-type-slug}
+```
+
+Ejemplos reales:
+- `Swimmer.InvalidFirstName` → `https://swimtracker.com/errors/problem-details/swimmer-invalid-first-name`
+- `Club.NotFound` → `https://swimtracker.com/errors/problem-details/club-not-found`
+- `System.ArgumentException` → `https://swimtracker.com/errors/exceptions/system-argument-exception`
+
+Para generar estas URLs automáticamente desde códigos de error, se utiliza la clase helper `ProblemDetailsTypeHelper` que se verá más adelante en la implementación.
+
 ### Ventajas de Problem Details
 
 **Consistencia** - Todos los errores siguen el mismo formato JSON, independientemente del tipo de error  
@@ -150,6 +194,7 @@ El manejador global de excepciones captura todas las excepciones no controladas 
 using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
+using SwimTracker.Api.ProblemDetails.Extensions;
 
 namespace SwimTracker.Api.ProblemDetails.Exceptions;
 
@@ -220,8 +265,8 @@ public class GlobalExceptionHandler : IExceptionHandler
                 Exception = exception,
                 ProblemDetails = new Microsoft.AspNetCore.Mvc.ProblemDetails
                 {
-                    // Tipo de error (puede ser una URL o un identificador único)
-                    Type = exception.GetType().FullName,
+                    // Tipo de error como URL (ej: https://swimtracker.com/errors/exceptions/system-argument-exception)
+                    Type = ProblemDetailsTypeHelper.FromException(exception),
                     
                     // Código HTTP
                     Status = httpContext.Response.StatusCode,
@@ -335,7 +380,7 @@ await response.WriteAsJsonAsync(new ProblemDetails
 **Ejemplo de respuesta completa en Production**:
 ```json
 {
-  "type": "System.ArgumentException",
+  "type": "https://swimtracker.com/errors/exceptions/system-argument-exception",
   "title": "An unexpected error occurred.",
   "status": 400,
   "detail": "An error occurred while processing your request.",
@@ -522,9 +567,11 @@ app.Run();
 
 #### Ejemplo de Respuesta Completa en Development
 
+#### Ejemplo de Respuesta Completa en Development
+
 ```json
 {
-  "type": "System.ArgumentException",
+  "type": "https://swimtracker.com/errors/exceptions/system-argument-exception",
   "title": "An unexpected error occurred.",
   "status": 400,
   "detail": "Value cannot be null. (Parameter 'name')",
@@ -540,7 +587,7 @@ app.Run();
 
 ```json
 {
-  "type": "System.ArgumentException",
+  "type": "https://swimtracker.com/errors/exceptions/system-argument-exception",
   "title": "An unexpected error occurred.",
   "status": 400,
   "detail": "An error occurred while processing your request.",
@@ -562,6 +609,84 @@ Estas propiedades son fundamentales para debugging en producción:
 - **Elasticsearch/Kibana**: Rastrear requests distribuidas con `traceId`
 - **Grafana Loki**: Correlacionar entre múltiples servicios usando `traceId` como correlationId
 
+### Paso 4.5: Crear el Helper para Generar URLs de Tipo de Error
+
+Para mantener consistencia en las URLs de la propiedad `type`, se crea una clase helper que convierte códigos de error en URLs válidas automáticamente:
+
+```csharp
+namespace SwimTracker.Api.ProblemDetails.Extensions;
+
+/// <summary>
+/// Helper class for generating consistent Problem Details type URIs.
+/// </summary>
+public static class ProblemDetailsTypeHelper
+{
+    private const string BaseUrl = "https://swimtracker.com/errors/problem-details";
+    private const string ExceptionBaseUrl = "https://swimtracker.com/errors/exceptions";
+
+    /// <summary>
+    /// Converts a domain error code to a Problem Details type URI.
+    /// </summary>
+    /// <param name="errorCode">The error code (e.g., "Swimmer.InvalidFirstName").</param>
+    /// <returns>A URI that identifies the error type.</returns>
+    public static string FromErrorCode(string errorCode)
+    {
+        // Convert "Swimmer.InvalidFirstName" to "swimmer-invalid-first-name"
+        var slug = errorCode
+            .Replace(".", "-")
+            .ToLowerInvariant();
+
+        // Add camel case support: "SwimmerInvalidFirstName" -> "swimmer-invalid-first-name"
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, "(?<!^)([A-Z])", "-$1").ToLowerInvariant();
+
+        return $"{BaseUrl}/{slug}";
+    }
+
+    /// <summary>
+    /// Converts an exception type to a Problem Details type URI.
+    /// </summary>
+    /// <param name="exception">The exception instance.</param>
+    /// <returns>A URI that identifies the exception type.</returns>
+    public static string FromException(Exception exception)
+    {
+        var exceptionTypeName = exception.GetType().FullName ?? exception.GetType().Name;
+        
+        // Convert "System.ArgumentException" to "system-argument-exception"
+        var slug = exceptionTypeName
+            .Replace(".", "-")
+            .ToLowerInvariant();
+
+        return $"{ExceptionBaseUrl}/{slug}";
+    }
+}
+```
+
+**Ejemplos de conversión**:
+
+```csharp
+// Errores de dominio
+ProblemDetailsTypeHelper.FromErrorCode("Swimmer.InvalidFirstName")
+// Resultado: "https://swimtracker.com/errors/problem-details/swimmer-invalid-first-name"
+
+ProblemDetailsTypeHelper.FromErrorCode("Club.NotFound")
+// Resultado: "https://swimtracker.com/errors/problem-details/club-not-found"
+
+// Excepciones
+ProblemDetailsTypeHelper.FromException(new ArgumentException())
+// Resultado: "https://swimtracker.com/errors/exceptions/system-argumentexception"
+
+ProblemDetailsTypeHelper.FromException(new DbUpdateException())
+// Resultado: "https://swimtracker.com/errors/exceptions/microsoft-entityframeworkcore-dbupdateexception"
+```
+
+**Ventajas de este enfoque**:
+
+✅ **Consistencia**: Todas las URLs siguen el mismo patrón  
+✅ **Mantenibilidad**: Si cambias el dominio o la estructura, solo actualizas las constantes  
+✅ **Legibilidad**: URLs en formato kebab-case son fáciles de leer  
+✅ **Automatización**: No necesitas escribir URLs manualmente en cada endpoint  
+✅ **Escalabilidad**: Fácil de extender para agregar más tipos de errores
+
 ### Paso 5: Retornar Problem Details en Casos de Fallo
 
 En lugar de retornar simples mensajes de error como `BadRequest()`, los endpoints retornan Problem Details con estructura detallada:
@@ -569,6 +694,7 @@ En lugar de retornar simples mensajes de error como `BadRequest()`, los endpoint
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using SwimTracker.Api.ProblemDetails.Endpoints;
+using SwimTracker.Api.ProblemDetails.Extensions;
 using SwimTracker.Application.Swimmers.CreateSwimmer;
 
 namespace SwimTracker.Api.ProblemDetails.Endpoints.Swimmers;
@@ -614,8 +740,8 @@ public class CreateSwimmer : IEndpoint
         // Si falló, retornar Problem Details en lugar de BadRequest
         return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            // Tipo del error (identificador único del problema)
-            Type = result.Error.Code,
+            // Tipo del error como URL (ej: https://swimtracker.com/errors/problem-details/swimmer-invalid-first-name)
+            Type = ProblemDetailsTypeHelper.FromErrorCode(result.Error.Code),
             
             // Título legible del problema
             Title = "Swimmer creation failed",
@@ -647,6 +773,7 @@ El mismo patrón se aplica a todos los endpoints. Por ejemplo, `GetSwimmer` reto
 
 ```csharp
 using SwimTracker.Api.ProblemDetails.Endpoints;
+using SwimTracker.Api.ProblemDetails.Extensions;
 using SwimTracker.Application.Swimmers.GetSwimmer;
 
 namespace SwimTracker.Api.ProblemDetails.Endpoints.Swimmers;
@@ -675,7 +802,7 @@ public class GetSwimmer : IEndpoint
 
         return Results.Problem(new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            Type = result.Error.Code,
+            Type = ProblemDetailsTypeHelper.FromErrorCode(result.Error.Code),
             Title = "Swimmer not found",
             Detail = result.Error.Description,
             Status = StatusCodes.Status404NotFound,
@@ -781,7 +908,7 @@ graph TD
 
 ```json
 {
-  "type": "Microsoft.EntityFrameworkCore.DbUpdateException",
+  "type": "https://swimtracker.com/errors/exceptions/microsoft-entityframeworkcore-dbupdateexception",
   "title": "An unexpected error occurred.",
   "detail": "An error occurred while processing your request.",
   "status": 500,
@@ -814,14 +941,19 @@ El `traceId` permite correlacionar el error en los logs del servidor para invest
 Usar códigos de error que identifiquen el dominio:
 
 ```csharp
-// Bien: Claro y específico
-Type = "Swimmer.InvalidFirstName"
-Type = "Club.NotFound"
-Type = "License.Expired"
+// Bien: Claro, específico y como URL
+Type = ProblemDetailsTypeHelper.FromErrorCode("Swimmer.InvalidFirstName")
+// Resultado: "https://swimtracker.com/errors/problem-details/swimmer-invalid-first-name"
 
-// Evitar: Demasiado genérico
-Type = "Error"
-Type = "BadRequest"
+Type = ProblemDetailsTypeHelper.FromErrorCode("Club.NotFound")
+// Resultado: "https://swimtracker.com/errors/problem-details/club-not-found"
+
+Type = ProblemDetailsTypeHelper.FromErrorCode("License.Expired")
+// Resultado: "https://swimtracker.com/errors/problem-details/license-expired"
+
+// Evitar: Códigos genéricos que no aportan información
+Type = ProblemDetailsTypeHelper.FromErrorCode("Error")
+Type = ProblemDetailsTypeHelper.FromErrorCode("BadRequest")
 ```
 
 ### 3. Información Sensible

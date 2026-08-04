@@ -1,7 +1,7 @@
-using SwimTracker.Api.Extensions;
+using SwimTracker.Api.ResultPattern.Extensions;
 using SwimTracker.Application.Swimmers.GetSwimmer;
 
-namespace SwimTracker.Api.Endpoints.Swimmers;
+namespace SwimTracker.Api.ResultPattern.Endpoints.Swimmers;
 
 /// <summary>
 /// Endpoint for retrieving a swimmer by ID.

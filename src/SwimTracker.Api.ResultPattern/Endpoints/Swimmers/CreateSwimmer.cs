@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SwimTracker.Api.Extensions;
+using SwimTracker.Api.ResultPattern.Extensions;
 using SwimTracker.Application.Swimmers.CreateSwimmer;
 
-namespace SwimTracker.Api.Endpoints.Swimmers;
+namespace SwimTracker.Api.ResultPattern.Endpoints.Swimmers;
 
 /// <summary>
 /// Endpoint for creating a new swimmer.

@@ -31,7 +31,7 @@ public class CreateSwimmerHandler : IRequestHandler<CreateSwimmerRequest, Create
         if (validationErrors.Any())
         {
             return Result.Failure<CreateSwimmerResponse>(
-                new Error("Swimmer.ValidationFailed", string.Join("; ", validationErrors)));
+                SwimmerErrors.ValidationFailed(string.Join("; ", validationErrors)));
         }
 
         var club = await _clubRepository.GetByIdAsync(request.ClubId, cancellationToken);

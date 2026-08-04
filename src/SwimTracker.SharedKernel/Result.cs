@@ -38,6 +38,9 @@ public class Result
     /// </summary>
     /// <param name="error">The error to convert.</param>
     public static implicit operator Result(Error error) => Failure(error);
+
+    public TOut Match<TOut>(Func<TOut> onSuccess, Func<Error, TOut> onFailure)
+        => IsSuccess ? onSuccess() : onFailure(Error);
 }
 
 public class Result<TValue> : Result
@@ -61,4 +64,7 @@ public class Result<TValue> : Result
     /// <param name="value">The value to convert.</param>
     public static implicit operator Result<TValue>(TValue? value) =>
         value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
+
+    public TOut Match<TOut>(Func<TValue, TOut> onSuccess, Func<Error, TOut> onFailure)
+        => IsSuccess ? onSuccess(Value) : onFailure(Error);
 }

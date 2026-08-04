@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SwimTracker.Api.Extensions;
+using SwimTracker.Api.ResultPattern.Extensions;
 using SwimTracker.Application.Clubs.CreateClub;
 
-namespace SwimTracker.Api.Endpoints.Clubs;
+namespace SwimTracker.Api.ResultPattern.Endpoints.Clubs;
 
 /// <summary>
 /// Endpoint for creating a new club.
